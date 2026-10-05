@@ -1,6 +1,6 @@
-# Proposed Convex data model
+# Convex data model
 
-Pending Mike's manual approval. No Convex schema has been created or deployed.
+Mike approved this schema on 5 October 2026. It is deployed to the isolated Time It development and production deployments in Sydney (`aws-ap-southeast-2`).
 
 Time It is a personal, single-owner app. The Mac keeps a durable local store and an outbox. Network sync never blocks starting or stopping a timer.
 

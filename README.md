@@ -2,7 +2,7 @@
 
 My little time tracker for the Mac, part of [Mikerosoft](https://mikerosoft.app).
 
-I wanted to replace Clockify with something I could make my own, and have a button right there on my taskbar to start and stop work. It defaults to Convex, but you can add other categories too.
+I wanted to replace Clockify with something I could make my own, and have a button in the menu bar to start and stop work. It defaults to Convex, but you can add other categories too.
 
 ![Time It](docs/screenshot.png)
 
@@ -40,16 +40,21 @@ Your local data lives in `~/Library/Application Support/com.mikerosoft.time-it/s
 
 ## Convex sync
 
-The native app works without a backend connection. Cloud sync needs the isolated Convex project's approved schema and deployed functions. See [the data model proposal](docs/data-model-proposal.md) for the two tables and sync rules. Schema creation is pending Mike's manual approval.
+The native app works without a backend connection. My development and production deployments run in Sydney (`aws-ap-southeast-2`), and the installed app uses production. Mike approved the two-table schema on 5 October 2026. See [the data model](docs/data-model-proposal.md) for the fields and sync rules.
 
-Once the schema is approved:
+To set up your own backend in Australia:
 
 ```sh
 npm ci
+npx convex deployment create your-team:your-project:dev/mac --type dev --region aws-ap-southeast-2 --default --select
 npx convex dev --once
+npx convex deployment create your-team:your-project:live --type prod --region aws-ap-southeast-2 --default
+npx convex deploy
 ```
 
-Set a random `TIME_IT_SYNC_KEY` of at least 32 characters in your Convex deployment's environment. The native app connects to the corresponding `https://your-deployment.convex.site` URL, using the same key in Connection settings. The app stores the key in macOS Keychain. Never commit it.
+Set a random `TIME_IT_SYNC_KEY` of at least 32 characters in your Convex deployment's environment. The native app connects to the corresponding `https://your-deployment.ap-southeast-2.convex.site` URL, using the same key in Connection settings. The app stores the key in macOS Keychain. Never commit it.
+
+For unattended local setup, `scripts/connect-sync.py` reads the key from stdin and stages it in a file readable only by your account. Restart the installed app to move it into Keychain and remove that file.
 
 Only the authenticated HTTP endpoint can reach the internal database functions. Stable IDs make upload retries safe, and revision acknowledgements keep an edit made during sync from getting lost. Archived categories keep their old history. Deleted entries keep a tombstone so an old offline copy doesn't bring them back.
 
@@ -60,7 +65,7 @@ This first version is a personal, single-owner app. The key gives access to the 
 ```sh
 swift test
 npm test
-npm run typecheck # Requires the approved schema and regenerated Convex types
+npm run typecheck
 bash restart.sh
 ```
 

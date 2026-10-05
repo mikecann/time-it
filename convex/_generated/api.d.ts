@@ -11,6 +11,7 @@
 import type * as http from "../http.js";
 import type * as protocol from "../protocol.js";
 import type * as sync from "../sync.js";
+import type * as validators from "../validators.js";
 
 import type {
   ApiFromModules,
@@ -22,6 +23,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   protocol: typeof protocol;
   sync: typeof sync;
+  validators: typeof validators;
 }>;
 
 /**

@@ -3,9 +3,7 @@ import { v } from "convex/values";
 import { paginationOptsValidator } from "convex/server";
 import { wins } from "./protocol";
 
-const metadata = { clientId: v.string(), deviceId: v.string(), revision: v.number(), updatedAt: v.number() };
-export const categoryValidator = v.object({ ...metadata, name: v.string(), color: v.string(), archived: v.boolean() });
-export const entryValidator = v.object({ ...metadata, categoryId: v.string(), note: v.string(), startedAt: v.number(), endedAt: v.optional(v.number()), deleted: v.boolean() });
+import { categoryValidator, entryValidator } from "./validators";
 
 export const upload = internalMutation({
   args: { categories: v.array(categoryValidator), entries: v.array(entryValidator) },

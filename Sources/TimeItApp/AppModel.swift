@@ -30,6 +30,7 @@ import TimeItCore
                 self?.writeWidget()
             }
         } catch { self.error = "Could not open your time data: \(error.localizedDescription). The existing file has been kept. Use Show Data Folder in Connection settings to make a backup before repairing it." }
+        loadConnectionBootstrap()
         ticks = Timer.publish(every: 1, on: .main, in: .common).autoconnect().sink { [weak self] date in
             guard let self else { return }; self.now = date
             if date.timeIntervalSince(self.lastAttempt) >= 30 { self.sync() }
@@ -66,6 +67,22 @@ import TimeItCore
     func stop() {
         guard let store else { return }
         perform { try store.stop(); selectedCategory = "convex"; note = "" }
+    }
+    private func loadConnectionBootstrap() {
+        let file = Self.support.appendingPathComponent("connection-bootstrap.json")
+        guard FileManager.default.fileExists(atPath: file.path) else { return }
+        struct Connection: Decodable { let url: String; let key: String }
+        do {
+            let connection = try JSONDecoder().decode(Connection.self, from: Data(contentsOf: file))
+            _ = try SyncClient(baseURL: connection.url, token: connection.key)
+            // The installed app writes its own Keychain item so future launches keep the same access identity.
+            try Keychain.save(connection.key)
+            endpoint = connection.url
+            UserDefaults.standard.set(endpoint, forKey: "syncURL")
+            try FileManager.default.removeItem(at: file)
+        } catch {
+            self.error = "Could not save the connection: \(error.localizedDescription). Your time data is unchanged."
+        }
     }
     func configure(url: String, key: String) {
         perform {
