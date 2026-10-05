@@ -1,0 +1,14 @@
+{
+  "name": "mikerosoft-time-it",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-strip-types --test backend-tests/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "convex:dev": "convex dev",
+    "convex:deploy": "convex deploy"
+  },
+  "dependencies": { "convex": "latest" },
+  "devDependencies": { "typescript": "latest", "@types/node": "latest" }
+}

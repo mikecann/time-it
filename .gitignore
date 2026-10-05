@@ -1,0 +1,8 @@
+.build/
+.swiftpm/
+node_modules/
+.env*
+!.env.example
+.DS_Store
+work/
+*.log
