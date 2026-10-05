@@ -240,7 +240,7 @@ private struct ConnectionView: View {
                 SecureField(model.configured ? "Leave blank to keep the saved key" : "Paste your sync key", text: $key).textFieldStyle(.roundedBorder)
                 HStack {
                     Button("Save connection") { model.configure(url: url, key: key); if model.error == nil { key = "" } }.buttonStyle(.borderedProminent)
-                    Button("Sync now") { model.sync() }.disabled(model.syncing || !model.configured)
+                    Button("Sync now") { model.sync(force: true) }.disabled(model.syncing || !model.configured)
                 }
             }
             Divider()

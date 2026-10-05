@@ -51,7 +51,7 @@ import TimeItCore
         } else { AppModel.shared.toggle() }
     }
     @objc private func toggleTimer() { AppModel.shared.toggle() }
-    @objc private func syncNow() { AppModel.shared.sync() }
+    @objc private func syncNow() { AppModel.shared.sync(force: true) }
     @objc private func showWindow() {
         NSApp.activate(ignoringOtherApps: true)
         if let window = NSApp.windows.first(where: { $0.title == "Time It" }) { window.makeKeyAndOrderFront(nil) }

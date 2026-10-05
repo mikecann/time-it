@@ -12,7 +12,7 @@ Click the timer in the menu bar to start recording time for Convex. Click again 
 
 The app window lets you choose another category, add a note, edit your history, add time you forgot to record, and export a CSV. Convex stays the default for the next quick start.
 
-Time is saved on your Mac before anything goes over the network. You can start and stop offline, quit the app with a timer running, and pick up where you left off. Sleep counts as elapsed time, so stop the timer when you're finished. When your connection comes back, pending changes upload automatically.
+Time is saved on your Mac before anything goes over the network. You can start and stop offline, quit the app with a timer running, and pick up where you left off. Sleep counts as elapsed time, so stop the timer when you're finished. When your connection comes back, pending changes upload automatically. History downloads on launch, reconnection, or when you press Sync now; an idle app does not keep downloading the whole history.
 
 There's also a widget for [my taskbar app](https://github.com/mikecann/taskbar). Turn on Time It under Widgets in the taskbar settings. Click to start Convex or stop the current timer, and right-click to open Time It.
 

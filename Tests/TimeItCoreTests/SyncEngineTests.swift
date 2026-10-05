@@ -54,6 +54,20 @@ final class SyncEngineTests: XCTestCase {
         try store.apply(SyncResponse(acknowledgedCategories: first.categories), sent: first)
         XCTAssertEqual(store.pendingBatch(limit: 1).entries.count, 1)
     }
+    @MainActor func testUploadsDoNotDownloadWholeHistoryUnlessRequested() async throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let store = try TimeStore(fileURL: folder.appendingPathComponent("state.json"))
+        var requests = 0
+        try await SyncEngine.run(store: store, download: false) { request in
+            requests += 1
+            XCTAssertFalse(request.includeCategories)
+            XCTAssertFalse(request.includeEntries)
+            return SyncResponse(acknowledgedCategories: request.categories, acknowledgedEntries: request.entries)
+        }
+        XCTAssertEqual(requests, 1)
+        try await SyncEngine.run(store: store, download: false) { _ in XCTFail("An idle app should not transfer history"); return SyncResponse() }
+    }
     @MainActor func testIndependentPageCursorsAndStalledPageDetection() async throws {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: folder) }

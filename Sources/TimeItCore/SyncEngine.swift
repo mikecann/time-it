@@ -1,7 +1,7 @@
 import Foundation
 
 @MainActor public enum SyncEngine {
-    public static func run(store: TimeStore, send: (SyncRequest) async throws -> SyncResponse) async throws {
+    public static func run(store: TimeStore, download: Bool = true, send: (SyncRequest) async throws -> SyncResponse) async throws {
         var batches = 0
         while store.pendingCount > 0 && batches < 100 {
             let sent = store.pendingBatch()
@@ -10,6 +10,7 @@ import Foundation
             batches += 1
             if result.acknowledgedEntries.isEmpty && result.acknowledgedCategories.isEmpty { throw SyncError.server(502) }
         }
+        guard download else { return }
         var categoryCursor: String?, entryCursor: String?
         var categoriesDone = false, entriesDone = false
         repeat {

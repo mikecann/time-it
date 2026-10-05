@@ -1,6 +1,6 @@
 # Validation on 5 October 2026
 
-- 13 Swift tests pass: atomic local storage, timer restart recovery, failed disk writes, midnight totals, CSV formula escaping, archived category history, revision acknowledgements, offline/reconnect retries, stopping during upload, upload dependency order, and independent download cursors.
+- 14 Swift tests pass: atomic local storage, timer restart recovery, failed disk writes, midnight totals, CSV formula escaping, archived category history, revision acknowledgements, offline/reconnect retries, stopping during upload, upload dependency order, and independent download cursors, and avoiding idle history transfers.
 - Five backend protocol tests pass: authentication, bounds and field validation, default category protection, duplicate retries, and conflict order.
 - Installed `/Users/m5-mike/Applications/Time It.app` checked through native UI: start Convex, quit while running, relaunch and recover elapsed time, stop, add Personal, start Personal, stop through the taskbar, and confirm the next quick default is Convex.
 - Taskbar integration: 315 Swift and 12 Python tests pass, shell syntax checks pass. Installed taskbar starts and stops the actual Time It app. Existing settings and signing identity are retained.

@@ -19,6 +19,7 @@ import TimeItCore
     private var ticks: AnyCancellable?
     private let monitor = NWPathMonitor()
     private var lastAttempt = Date.distantPast
+    private var needsDownload = true
     private var syncTask: Task<Void, Never>?
 
     private init() {
@@ -36,7 +37,7 @@ import TimeItCore
         monitor.pathUpdateHandler = { [weak self] path in
             Task { @MainActor in
                 self?.online = path.status == .satisfied
-                if path.status == .satisfied { self?.sync() }
+                if path.status == .satisfied { self?.sync(force: true) }
             }
         }
         monitor.start(queue: DispatchQueue(label: "time-it.network"))
@@ -73,18 +74,23 @@ import TimeItCore
             try Keychain.save(actualKey)
             endpoint = url.trimmingCharacters(in: .whitespacesAndNewlines)
             UserDefaults.standard.set(endpoint, forKey: "syncURL")
+            needsDownload = true
         }
     }
-    func sync() {
-        guard !syncing, online, let store else { return }
+    func sync(force: Bool = false) {
+        if force { needsDownload = true }
         lastAttempt = Date()
+        guard !syncing, online, let store, pending > 0 || needsDownload else { return }
         guard let key = Keychain.read(), let client = try? SyncClient(baseURL: endpoint, token: key) else { syncStatus = "Saved on this Mac · Sync not connected"; return }
+        let download = needsDownload
+        needsDownload = false
         syncing = true; syncStatus = "Syncing…"
         syncTask = Task {
             do {
-                try await SyncEngine.run(store: store) { request in try await client.send(request) }
+                try await SyncEngine.run(store: store, download: download) { request in try await client.send(request) }
                 syncStatus = pending == 0 ? "Everything synced" : "\(pending) changes waiting to sync"
             } catch {
+                needsDownload = needsDownload || download
                 syncStatus = "Saved locally · Waiting to sync"
                 if case SyncError.unauthorized = error { self.error = error.localizedDescription }
             }
