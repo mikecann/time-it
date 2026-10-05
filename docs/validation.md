@@ -24,3 +24,9 @@ A harness using the actual Swift store, sync engine and HTTP client passed simul
 The installed app was separately checked through its real UI: start Convex, wait for automatic sync, stop, and inspect its Sydney production URL and Everything synced state. Production returned the exact locally saved ID, revision and timestamps. That QA entry was soft-deleted locally and remotely; no pending changes or running timer remained. The existing Personal and Convex categories were preserved.
 
 `swift test`, `npm test`, and `npm run typecheck` pass. CI now also checks backend types against the committed generated schema types.
+
+## Menu bar visibility fix
+
+The original AppKit status item reported visible in-process, and macOS allowed Time It in Menu Bar settings, but Mike confirmed the timer icon was absent. Restarting the app did not resolve it. The Mac runs Tahoe 26.6.2 (25G83).
+
+Time It now uses a SwiftUI `MenuBarExtra`, the same mechanism used by the visible Meeting Archive app. The installed build passed all 14 Swift tests, and Mike confirmed the new timer icon appeared on 5 October 2026. Its menu offers Start Convex Timer or Stop Timer first, followed by Open Time It, Sync Now and Quit. The taskbar widget and URL controls are retained.

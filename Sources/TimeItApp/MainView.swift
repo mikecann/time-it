@@ -248,7 +248,7 @@ private struct ConnectionView: View {
                 model.perform { if value { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() } }
                 startAtLogin = SMAppService.mainApp.status == .enabled
             }
-            Text("Click the menu bar timer to start Convex or stop the current timer. Right-click it to open this window. A running timer continues across app restarts and sleep.").foregroundStyle(.secondary)
+            Text("Click the timer icon in the menu bar, then choose Start Convex Timer or Stop Timer. Open Time It brings you back to this window. A running timer continues across app restarts and sleep.").foregroundStyle(.secondary)
             Button("Show data folder") { model.showDataFolder() }
             Text("Make a backup of state.json if you want a separate copy of your local history. Sync credentials are stored in Keychain.").font(.caption).foregroundStyle(.secondary)
         }.onAppear { url = model.endpoint }

@@ -8,7 +8,7 @@ I wanted to replace Clockify with something I could make my own, and have a butt
 
 ## Using it
 
-Click the timer in the menu bar to start recording time for Convex. Click again to stop. Right-click it to open the app or sync now.
+Click the timer icon in the menu bar and choose Start Convex Timer. Choose Stop Timer when you’re finished. The same menu lets you open the app or sync now.
 
 The app window lets you choose another category, add a note, edit your history, add time you forgot to record, and export a CSV. Convex stays the default for the next quick start.
 
