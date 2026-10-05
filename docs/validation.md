@@ -38,4 +38,12 @@ Time It now uses a SwiftUI `MenuBarExtra`, the same mechanism used by the visibl
 - Four exporter tests pass for exact timestamps, source descriptions and labels, skipped running Clockify timers, stable IDs, pagination through a short non-final page, and rejecting repeated pages.
 - The five backend tests and backend typecheck pass. The deployed schema is unchanged.
 - Installed app checked with the existing real timer running: Reports shows the live total, category ring, weekday profile and activity grid; selecting an empty category shows zero totals and the empty state. The original timer ID, start timestamp and revision remain unchanged across installation, with no pending changes.
-- Clockify's signed-in personal workspace is accessible, but CSV export requires an upgrade and the account has no API key. The user was asked to create an API key. No Clockify history has been imported yet, and actual API export and production import verification remain pending that credential.
+- At preparation time, Clockify CSV export required an upgrade and API export was waiting for a user-created key. The actual import was completed and verified on 6 October 2026, as described below.
+
+## Live Clockify import verification
+
+On 6 October 2026, the exporter read the owner’s completed history through every API page, including the final page marker. Every imported ID, timestamp, note, category mapping and total duration matched the private source archive. Existing native sessions, including the active timer, remained unchanged.
+
+The installed app imported the archive through History and uploaded it through its normal sync engine. A separate read of the Australian production database matched every local entry and category field, with no pending changes. Reimporting the same archive through the app added no sessions or categories. Reports displayed the full imported date range, monthly totals and category breakdown.
+
+The source archive, credentials, database verification snapshots and screenshots containing personal history remain outside Git. The public website uses the app’s empty-state screenshot.
