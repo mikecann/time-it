@@ -12,6 +12,10 @@ Click the timer icon in the menu bar and choose Start Convex Timer. Choose Stop 
 
 The app window lets you choose another category, add a note, edit your history, add time you forgot to record, and export a CSV. Convex stays the default for the next quick start.
 
+Open Reports to see where your time went. There’s a stacked time chart, a category breakdown, average hours by weekday, and a daily activity grid. Choose a week, month, year, all your history, or your own dates, and filter by category. Overnight sessions are split at local midnight. Reports work offline and include the running timer, updating each minute.
+
+Overlapping sessions keep their original times and count towards the total. Reports show how much overlap there is so you can review it in History if needed.
+
 Time is saved on your Mac before anything goes over the network. You can start and stop offline, quit the app with a timer running, and pick up where you left off. Sleep counts as elapsed time, so stop the timer when you're finished. When your connection comes back, pending changes upload automatically. History downloads on launch, reconnection, or when you press Sync now; an idle app does not keep downloading the whole history.
 
 There's also a widget for [my taskbar app](https://github.com/mikecann/taskbar). Turn on Time It under Widgets in the taskbar settings. Click to start Convex or stop the current timer, and right-click to open Time It.
@@ -60,15 +64,28 @@ Only the authenticated HTTP endpoint can reach the internal database functions. 
 
 This first version is a personal, single-owner app. The key gives access to the whole personal workspace. If you use two Macs offline, they can each run a timer; they don't coordinate while disconnected. Conflicting edits choose the higher revision, then device ID to break a tie.
 
+## Importing Clockify
+
+Create an API key in Clockify under Preferences, Advanced, Manage API keys. Save it in a private local file rather than putting it in a command or committing it. The exporter uses [Clockify’s API](https://docs.clockify.me/) to read your own sessions from every accessible workspace, including history on archived projects. It doesn’t change Clockify.
+
+```sh
+python3 scripts/export-clockify.py --key-file work/clockify-api-key.txt --output work/clockify-export
+```
+
+In Time It, open History, click Import Clockify, and choose `work/clockify-export/time-it.json`. The import saves a backup first, keeps your running Time It timer, and queues the imported history for normal Convex sync. Stable Clockify IDs mean you can import the archive again without duplicates, and edited or deleted sessions stay as you saved them.
+
+Clients become categories where available, otherwise the project name is used. Convex projects use the existing Convex category. Descriptions, project names, tasks and tags are retained in the note, and the full source records are kept in the private `clockify-source.json` archive. A running Clockify entry is skipped until it has a finish time. `summary.json` records the export count, date range and duration for verification.
+
 ## Development
 
 ```sh
 swift test
 npm test
 npm run typecheck
+python3 scripts/test-export-clockify.py
 bash restart.sh
 ```
 
-The Swift tests cover local persistence, restart recovery, failed writes, midnight totals, CSV escaping, and sync acknowledgements. The backend tests cover request validation, authentication, and conflict order.
+The Swift tests also cover report totals, daylight saving changes, overlaps, import backups, duplicate imports, edited and deleted imported sessions, and preserving a running timer. Exporter tests check source labels, exact times and pagination. The backend tests cover request validation, authentication, and conflict order.
 
 MIT licensed.

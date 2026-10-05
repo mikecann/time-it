@@ -114,6 +114,37 @@ public enum StoreError: LocalizedError {
         }.prefix(limit))
         return SyncRequest(categories: categories, entries: entries, includeCategories: false, includeEntries: false)
     }
+    public func importClockify(_ archive: ClockifyArchive) throws -> ClockifyImportResult {
+        try archive.validate()
+        let backup = fileURL.deletingLastPathComponent().appendingPathComponent("before-clockify-\(UUID().uuidString.lowercased()).json")
+        try Data(contentsOf: fileURL).write(to: backup, options: .atomic)
+        try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: backup.path)
+        var added = 0, existing = 0, categoriesAdded = 0
+        try commit { state in
+            var mapping: [String: String] = [:]
+            for imported in archive.categories {
+                // Reuse Convex and any existing category names without renaming or archiving the user's categories.
+                if let local = state.categories.first(where: { $0.id == imported.id || $0.name.caseInsensitiveCompare(imported.name) == .orderedSame }) {
+                    mapping[imported.id] = local.id
+                } else {
+                    var category = imported
+                    category.deviceId = state.deviceId; category.revision = 1; category.updatedAt = Date().milliseconds
+                    state.categories.append(category); state.pendingCategories.insert(category.id)
+                    mapping[imported.id] = category.id; categoriesAdded += 1
+                }
+            }
+            // Include tombstones in this set: reimporting must not resurrect a deleted session or overwrite an edit.
+            var known = Set(state.entries.map(\.id))
+            for imported in archive.entries {
+                guard known.insert(imported.id).inserted else { existing += 1; continue }
+                var entry = imported
+                entry.categoryId = mapping[entry.categoryId]!
+                entry.deviceId = state.deviceId; entry.revision = 1; entry.updatedAt = Date().milliseconds
+                state.entries.append(entry); state.pendingEntries.insert(entry.id); added += 1
+            }
+        }
+        return ClockifyImportResult(added: added, existing: existing, categoriesAdded: categoriesAdded, skippedRunning: archive.skippedRunning, backupURL: backup)
+    }
     public func apply(_ response: SyncResponse, sent: SyncRequest) throws {
         try commit { state in
             for record in response.acknowledgedCategories {

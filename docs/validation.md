@@ -30,3 +30,12 @@ The installed app was separately checked through its real UI: start Convex, wait
 The original AppKit status item reported visible in-process, and macOS allowed Time It in Menu Bar settings, but Mike confirmed the timer icon was absent. Restarting the app did not resolve it. The Mac runs Tahoe 26.6.2 (25G83).
 
 Time It now uses a SwiftUI `MenuBarExtra`, the same mechanism used by the visible Meeting Archive app. The installed build passed all 14 Swift tests, and Mike confirmed the new timer icon appeared on 5 October 2026. Its menu offers Start Convex Timer or Stop Timer first, followed by Open Time It, Sync Now and Quit. The taskbar widget and URL controls are retained.
+
+## Reports and Clockify import preparation
+
+- 24 Swift tests pass, including local-midnight splitting, a 23-hour Sydney DST day, category filtering, tombstones, active timers, overlap totals, month grouping and empty periods.
+- Import tests cover an unchanged running timer, a complete pre-import backup, category reuse, edited and deleted imported sessions, failed atomic writes, and 205 imported sessions surviving an offline restart before draining three sync batches without duplicates.
+- Four exporter tests pass for exact timestamps, source descriptions and labels, skipped running Clockify timers, stable IDs, pagination through a short non-final page, and rejecting repeated pages.
+- The five backend tests and backend typecheck pass. The deployed schema is unchanged.
+- Installed app checked with the existing real timer running: Reports shows the live total, category ring, weekday profile and activity grid; selecting an empty category shows zero totals and the empty state. The original timer ID, start timestamp and revision remain unchanged across installation, with no pending changes.
+- Clockify's signed-in personal workspace is accessible, but CSV export requires an upgrade and the account has no API key. The user was asked to create an API key. No Clockify history has been imported yet, and actual API export and production import verification remain pending that credential.

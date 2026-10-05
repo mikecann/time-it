@@ -9,6 +9,7 @@ struct MainView: View {
     @State private var editor: EntryEditorItem?
     @State private var search = ""
     @State private var filter = "all"
+    @State private var historyLimit = 100
     var body: some View {
         NavigationSplitView {
             VStack(alignment: .leading, spacing: 24) {
@@ -17,7 +18,7 @@ struct MainView: View {
                     Text("Time It").font(.title2.weight(.semibold))
                 }.padding(.top, 20)
                 VStack(spacing: 5) {
-                    ForEach([("Today", "sun.max"), ("History", "clock.arrow.circlepath"), ("Categories", "square.grid.2x2"), ("Connection", "arrow.triangle.2.circlepath")], id: \.0) { label, symbol in
+                    ForEach([("Today", "sun.max"), ("Reports", "chart.bar.xaxis"), ("History", "clock.arrow.circlepath"), ("Categories", "square.grid.2x2"), ("Connection", "arrow.triangle.2.circlepath")], id: \.0) { label, symbol in
                         Button { model.page = label } label: {
                             Label(label, systemImage: symbol).frame(maxWidth: .infinity, alignment: .leading).padding(11)
                                 .background(model.page == label ? accent.opacity(0.16) : .clear, in: RoundedRectangle(cornerRadius: 9))
@@ -38,6 +39,7 @@ struct MainView: View {
                         Text(model.page).font(.largeTitle.weight(.semibold))
                         Spacer()
                         if model.page == "Today" || model.page == "History" {
+                            if model.page == "History" { Button("Import Clockify", systemImage: "square.and.arrow.down") { model.importClockify() } }
                             Button("Add time", systemImage: "plus") { editor = EntryEditorItem(entry: nil) }
                             Button("Export", systemImage: "square.and.arrow.up") { model.exportCSV() }
                         }
@@ -50,7 +52,16 @@ struct MainView: View {
                             Button { model.error = nil } label: { Image(systemName: "xmark") }.buttonStyle(.plain)
                         }.padding(14).background(.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
                     }
+                    if let notice = model.importNotice {
+                        HStack(alignment: .top) {
+                            Image(systemName: "checkmark.circle").foregroundStyle(.green)
+                            Text(notice).font(.callout).textSelection(.enabled)
+                            Spacer()
+                            Button { model.importNotice = nil } label: { Image(systemName: "xmark") }.buttonStyle(.plain)
+                        }.padding(14).background(.green.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+                    }
                     switch model.page {
+                    case "Reports": ReportsView(model: model)
                     case "History": history
                     case "Categories": CategoriesView(model: model)
                     case "Connection": ConnectionView(model: model)
@@ -116,8 +127,13 @@ struct MainView: View {
                 (filter == "all" || filter == entry.categoryId) && (search.isEmpty || entry.note.localizedCaseInsensitiveContains(search) || (model.store?.category(entry.categoryId)?.name ?? "").localizedCaseInsensitiveContains(search))
             }
             if filtered.isEmpty { empty("No matching entries", description: "Your recorded time will appear here.") }
-            ForEach(filtered) { entry in entryRow(entry, showDate: true) }
-        }
+            Text("\(filtered.count.formatted()) sessions").font(.caption).foregroundStyle(.secondary)
+            LazyVStack(spacing: 12) {
+                ForEach(Array(filtered.prefix(historyLimit))) { entry in entryRow(entry, showDate: true) }
+                if filtered.count > historyLimit { Button("Show 100 more") { historyLimit += 100 }.padding() }
+            }
+        }.onChange(of: search) { _, _ in historyLimit = 100 }
+            .onChange(of: filter) { _, _ in historyLimit = 100 }
     }
     private func metric(_ title: String, value: TimeInterval) -> some View {
         VStack(alignment: .leading, spacing: 9) {

@@ -9,6 +9,7 @@ import TimeItCore
     @Published var store: TimeStore?
     @Published var now = Date()
     @Published var error: String?
+    @Published var importNotice: String?
     @Published var syncStatus = "Saved on this Mac"
     @Published var syncing = false
     @Published var online = true
@@ -123,6 +124,20 @@ import TimeItCore
         guard let store else { return }
         let panel = NSSavePanel(); panel.nameFieldStringValue = "time-it-\(now.formatted(.iso8601.year().month().day().dateSeparator(.dash))).csv"
         if panel.runModal() == .OK, let url = panel.url { perform { try store.csv().write(to: url, atomically: true, encoding: .utf8) } }
+    }
+    func importClockify() {
+        guard let store else { return }
+        let panel = NSOpenPanel()
+        panel.title = "Import Clockify history"
+        panel.message = "Choose the JSON archive created by Time It’s Clockify exporter. Your running timer will continue."
+        panel.allowsMultipleSelection = false; panel.canChooseDirectories = false
+        panel.allowedContentTypes = [.json]
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        perform {
+            let archive = try JSONDecoder().decode(ClockifyArchive.self, from: Data(contentsOf: url))
+            let result = try store.importClockify(archive)
+            importNotice = "Imported \(result.added.formatted()) Clockify sessions and \(result.categoriesAdded) categories. \(result.existing.formatted()) already imported sessions were left as saved.\(result.skippedRunning > 0 ? " Skipped \(result.skippedRunning) running Clockify timers." : "") A backup is saved in your data folder."
+        }
     }
     func showDataFolder() { NSWorkspace.shared.open(Self.support) }
     func writeWidget() {
