@@ -149,7 +149,8 @@ struct MainView: View {
                 Text("\(model.store?.category(entry.categoryId)?.name ?? "Unknown") · \(Date(milliseconds: entry.startedAt).formatted(date: showDate ? .abbreviated : .omitted, time: .shortened))\(entry.endedAt.map { " to " + Date(milliseconds: $0).formatted(date: .omitted, time: .shortened) } ?? " · Running")").font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
-            Text(durationText(entry.duration(at: model.now))).font(.system(.body, design: .monospaced))
+            if entry.endedAt == nil { Text(durationText(entry.duration(at: model.now))).font(.system(.body, design: .monospaced)) }
+            else { DurationField(model: model, entry: entry) }
             if model.store?.state.pendingEntries.contains(entry.id) == true { Image(systemName: "arrow.triangle.2.circlepath").font(.caption).foregroundStyle(.secondary).help("Saved locally, waiting to sync") }
             Button { editor = EntryEditorItem(entry: entry) } label: { Image(systemName: "pencil") }.buttonStyle(.borderless).help("Edit time entry")
         }.padding(15).background(Color.primary.opacity(0.035), in: RoundedRectangle(cornerRadius: 10))
@@ -160,6 +161,35 @@ struct MainView: View {
             Text(title).font(.headline)
             Text(description).foregroundStyle(.secondary)
         }.frame(maxWidth: .infinity).padding(35)
+    }
+}
+
+/// Click the duration, type a new one and press Return. The start stays put and the end moves.
+private struct DurationField: View {
+    @ObservedObject var model: AppModel
+    let entry: TimeEntry
+    @State private var text = ""
+    @FocusState private var focused: Bool
+    private var current: String { durationText(entry.duration(at: model.now)) }
+    var body: some View {
+        TextField("", text: $text)
+            .textFieldStyle(.plain).font(.system(.body, design: .monospaced)).multilineTextAlignment(.trailing)
+            .frame(width: 90).padding(.vertical, 3).padding(.horizontal, 6)
+            .background(focused ? Color.primary.opacity(0.08) : .clear, in: RoundedRectangle(cornerRadius: 6))
+            .focused($focused)
+            .help("Click to change the duration, e.g. 3:00, 1.5 or 1h 30m")
+            .onAppear { text = current }
+            .onChange(of: entry) { _, _ in if !focused { text = current } }
+            .onSubmit { commit(); focused = false }
+            .onChange(of: focused) { _, isFocused in if !isFocused { commit() } }
+            .onExitCommand { text = current; focused = false }
+    }
+    private func commit() {
+        guard text != current else { return }
+        guard let seconds = parseDuration(text) else { text = current; return }
+        let start = Date(milliseconds: entry.startedAt)
+        model.perform { try model.store?.updateEntry(id: entry.id, categoryId: entry.categoryId, note: entry.note, start: start, end: start.addingTimeInterval(seconds)) }
+        text = durationText(seconds)
     }
 }
 

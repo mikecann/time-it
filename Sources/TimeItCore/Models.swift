@@ -95,3 +95,25 @@ public func durationText(_ seconds: TimeInterval) -> String {
     let s = Int(max(0, seconds))
     return String(format: "%02d:%02d:%02d", s / 3600, (s / 60) % 60, s % 60)
 }
+
+/// Reads a typed duration the way Clockify does: "3:00", "2:30:15", "1.5" (hours), "1h 30m", "45m" or "90s".
+public func parseDuration(_ text: String) -> TimeInterval? {
+    let value = text.trimmingCharacters(in: .whitespaces).lowercased()
+    if value.isEmpty { return nil }
+    if value.contains(":") {
+        let parts = value.split(separator: ":", omittingEmptySubsequences: false).map { Int($0.trimmingCharacters(in: .whitespaces)) }
+        guard (2...3).contains(parts.count), parts.allSatisfy({ $0 != nil && $0! >= 0 }) else { return nil }
+        let numbers = parts.map { $0! }
+        guard numbers.dropFirst().allSatisfy({ $0 < 60 }) else { return nil }
+        return TimeInterval(numbers[0] * 3600 + numbers[1] * 60 + (numbers.count == 3 ? numbers[2] : 0))
+    }
+    if let hours = Double(value) { return hours >= 0 ? hours * 3600 : nil }
+    let units: [Character: Double] = ["h": 3600, "m": 60, "s": 1]
+    var total = 0.0, number = ""
+    for character in value where character != " " {
+        if character.isNumber || character == "." { number.append(character); continue }
+        guard let unit = units[character], let amount = Double(number) else { return nil }
+        total += amount * unit; number = ""
+    }
+    return number.isEmpty ? total : nil
+}
