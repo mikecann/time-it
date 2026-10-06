@@ -14,6 +14,8 @@ The app window lets you choose another category, add a note, edit your history, 
 
 Open Reports to see where your time went. There’s a stacked time chart, a category breakdown, average hours by weekday, and a daily activity grid. Choose a week, month, year, all your history, or your own dates, and filter by category. Overnight sessions are split at local midnight. Reports work offline and include the running timer, updating each minute.
 
+The daily average cards use the previous 30 complete local days, regardless of the chart’s date range. One averages days with any recorded time; the other averages only days with at least six hours recorded. Both follow the category filter, show the number of days counted, and leave today out so an unfinished day doesn't pull the average down. The six-hour threshold uses the day's combined sessions. If no days qualify, the card says No data.
+
 Overlapping sessions keep their original times and count towards the total. Reports show how much overlap there is so you can review it in History if needed.
 
 Time is saved on your Mac before anything goes over the network. You can start and stop offline, quit the app with a timer running, and pick up where you left off. Sleep counts as elapsed time, so stop the timer when you're finished. When your connection comes back, pending changes upload automatically. History downloads on launch, reconnection, or when you press Sync now; an idle app does not keep downloading the whole history.

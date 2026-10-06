@@ -13,6 +13,7 @@ struct ReportsView: View {
     @State private var start = Calendar.current.startOfDay(for: Date()).addingTimeInterval(-30 * 86400)
     @State private var end = Date()
     @State private var report: TimeReport?
+    @State private var recentAverages: RecentDailyAverages?
     @State private var selectedDate: Date?
     private var calendar: Calendar { var value = Calendar.current; value.firstWeekday = 2; value.minimumDaysInFirstWeek = 4; return value }
     private var categories: [TimeItCore.Category] { model.store?.state.categories ?? [] }
@@ -37,6 +38,16 @@ struct ReportsView: View {
                 ViewThatFits(in: .horizontal) {
                     HStack(spacing: 12) { metrics(report) }
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) { metrics(report) }
+                }
+                if let recentAverages {
+                    VStack(alignment: .leading, spacing: 10) {
+                        ViewThatFits(in: .horizontal) {
+                            HStack(spacing: 12) { dailyAverages(recentAverages) }
+                            VStack(spacing: 12) { dailyAverages(recentAverages) }
+                        }
+                        Text("\(recentAverages.interval.start.formatted(date: .abbreviated, time: .omitted)) – \(recentAverages.interval.end.addingTimeInterval(-1).formatted(date: .abbreviated, time: .omitted)). Both averages use the category filter and exclude today and days with no recorded time.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
                 }
                 if report.total == 0 {
                     ContentUnavailableView("No time in this range", systemImage: "chart.bar", description: Text("Choose another date range or import your Clockify history from History."))
@@ -97,19 +108,24 @@ struct ReportsView: View {
             through = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: max(start, end)))!
         }
         report = TimeReport(entries: model.store?.state.entries ?? [], interval: DateInterval(start: from, end: max(through, from)), categoryId: category == "all" ? nil : category, now: model.now, calendar: calendar)
+        recentAverages = RecentDailyAverages(entries: model.store?.state.entries ?? [], categoryId: category == "all" ? nil : category, now: model.now, calendar: calendar)
         selectedDate = nil
     }
 
     @ViewBuilder private func metrics(_ report: TimeReport) -> some View {
         metric("Tracked time", value: hours(report.total))
         metric("Days recorded", value: "\(report.activeDays)")
-        metric("Average active day", value: hours(report.averageActiveDay))
         metric("Sessions", value: report.sessionCount.formatted())
     }
-    private func metric(_ title: String, value: String) -> some View {
+    @ViewBuilder private func dailyAverages(_ averages: RecentDailyAverages) -> some View {
+        metric("30-day daily average", value: averages.averageRecordedDay.map(hours) ?? "No data", detail: "\(averages.recordedDays) \(averages.recordedDays == 1 ? "recorded day" : "recorded days")")
+        metric("30-day average · 6h+ days", value: averages.averageSixHourDay.map(hours) ?? "No data", detail: "\(averages.sixHourDays) \(averages.sixHourDays == 1 ? "day" : "days") with at least 6h recorded")
+    }
+    private func metric(_ title: String, value: String, detail: String? = nil) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title).font(.callout).foregroundStyle(.secondary)
             Text(value).font(.system(size: 25, weight: .medium, design: .rounded)).monospacedDigit()
+            if let detail { Text(detail).font(.caption).foregroundStyle(.secondary) }
         }.frame(minWidth: 120, maxWidth: .infinity, alignment: .leading).padding(18)
             .background(Color.primary.opacity(0.035), in: RoundedRectangle(cornerRadius: 12))
     }

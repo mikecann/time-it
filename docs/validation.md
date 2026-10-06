@@ -47,3 +47,9 @@ On 6 October 2026, the exporter read the owner’s completed history through eve
 The installed app imported the archive through History and uploaded it through its normal sync engine. A separate read of the Australian production database matched every local entry and category field, with no pending changes. Reimporting the same archive through the app added no sessions or categories. Reports displayed the full imported date range, monthly totals and category breakdown.
 
 The source archive, credentials, database verification snapshots and screenshots containing personal history remain outside Git. The public website uses the app’s empty-state screenshot.
+
+## Recent daily averages
+
+The report replaces the lifetime active-day average with two clearly labelled averages for the previous 30 complete local calendar days. Both follow the category filter; one includes every recorded day and one includes only daily totals of at least six hours. The cards show the counted days and the exact window, with No data when nothing qualifies.
+
+All 28 Swift tests pass. The four new tests cover the window boundaries, excluding today and unrecorded days, category filtering before the inclusive six-hour threshold, combined sessions and midnight splits, DST, and empty results. The installed app’s displayed values match an independent calculation from local history. Selecting an empty category shows No data for both averages. Every saved entry, category and pending set, including the active timer, remained identical across installation and verification.
