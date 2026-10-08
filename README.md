@@ -20,8 +20,6 @@ Overlapping sessions keep their original times and count towards the total. Repo
 
 Time is saved on your Mac before anything goes over the network. You can start and stop offline, quit the app with a timer running, and pick up where you left off. Sleep counts as elapsed time, so stop the timer when you're finished. When your connection comes back, pending changes upload automatically. History downloads on launch, reconnection, or when you press Sync now; an idle app does not keep downloading the whole history.
 
-There's also a widget for [my taskbar app](https://github.com/mikecann/taskbar). Turn on Time It under Widgets in the taskbar settings. Click to start Convex or stop the current timer, and right-click to open Time It.
-
 ## Get it
 
 Paste this into your AI coding agent:

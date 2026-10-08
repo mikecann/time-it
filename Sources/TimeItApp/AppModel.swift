@@ -26,10 +26,7 @@ import TimeItCore
     private init() {
         do {
             store = try TimeStore(fileURL: Self.support.appendingPathComponent("state.json"))
-            store?.onChange = { [weak self] in
-                self?.objectWillChange.send()
-                self?.writeWidget()
-            }
+            store?.onChange = { [weak self] in self?.objectWillChange.send() }
         } catch { self.error = "Could not open your time data: \(error.localizedDescription). The existing file has been kept. Use Show Data Folder in Connection settings to make a backup before repairing it." }
         loadConnectionBootstrap()
         ticks = Timer.publish(every: 1, on: .main, in: .common).autoconnect().sink { [weak self] date in
@@ -43,7 +40,6 @@ import TimeItCore
             }
         }
         monitor.start(queue: DispatchQueue(label: "time-it.network"))
-        writeWidget()
     }
     var active: TimeEntry? { store?.activeEntry }
     var categories: [TimeItCore.Category] { store?.categories ?? [] }
@@ -113,7 +109,6 @@ import TimeItCore
                 if case SyncError.unauthorized = error { self.error = error.localizedDescription }
             }
             syncing = false
-            writeWidget()
         }
     }
     func total(_ component: Calendar.Component, category: String? = nil) -> TimeInterval {
@@ -140,12 +135,4 @@ import TimeItCore
         }
     }
     func showDataFolder() { NSWorkspace.shared.open(Self.support) }
-    func writeWidget() {
-        guard let store else { return }
-        let state: [String: Any] = ["running": store.activeEntry != nil, "startedAt": store.activeEntry?.startedAt ?? 0, "category": store.activeEntry.flatMap { store.category($0.categoryId)?.name } ?? "Convex", "pending": store.pendingCount]
-        if let data = try? JSONSerialization.data(withJSONObject: state) {
-            try? data.write(to: Self.support.appendingPathComponent("widget.json"), options: .atomic)
-        }
-        DistributedNotificationCenter.default().postNotificationName(Notification.Name("com.mikerosoft.time-it.changed"), object: nil)
-    }
 }
