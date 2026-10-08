@@ -20,6 +20,17 @@ final class TimeStoreTests: XCTestCase {
             XCTAssertEqual(restored.pendingBatch().entries.first?.revision, 2)
         }
     }
+    func testMovingRunningStartKeepsTimerRunning() async throws {
+        try await MainActor.run {
+            let store = try makeStore()
+            try store.start(at: Date(timeIntervalSince1970: 1_000))
+            let active = try XCTUnwrap(store.activeEntry)
+            try store.updateEntry(id: active.id, categoryId: active.categoryId, note: active.note, start: Date(timeIntervalSince1970: 400), end: nil)
+            XCTAssertEqual(store.activeEntry?.id, active.id)
+            XCTAssertEqual(store.activeEntry?.duration(at: Date(timeIntervalSince1970: 1_000)), 600)
+            XCTAssertEqual(store.pendingBatch().entries.first?.revision, 2)
+        }
+    }
     func testFailedWriteDoesNotPublishTimer() async throws {
         try await MainActor.run {
             let initial = try makeStore()

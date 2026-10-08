@@ -81,8 +81,11 @@ struct MainView: View {
                     Spacer()
                     if model.active != nil { Text("Recording").font(.callout).foregroundStyle(accent) }
                 }
-                Text(durationText(model.active?.duration(at: model.now) ?? 0))
-                    .font(.system(size: 64, weight: .light, design: .monospaced)).monospacedDigit()
+                if let active = model.active {
+                    DurationField(model: model, entry: active, font: .system(size: 64, weight: .light, design: .monospaced), width: nil, alignment: .leading)
+                } else {
+                    Text(durationText(0)).font(.system(size: 64, weight: .light, design: .monospaced)).monospacedDigit()
+                }
                 if let active = model.active {
                     if !active.note.isEmpty { Text(active.note).foregroundStyle(.secondary) }
                     HStack {
@@ -149,8 +152,7 @@ struct MainView: View {
                 Text("\(model.store?.category(entry.categoryId)?.name ?? "Unknown") · \(Date(milliseconds: entry.startedAt).formatted(date: showDate ? .abbreviated : .omitted, time: .shortened))\(entry.endedAt.map { " to " + Date(milliseconds: $0).formatted(date: .omitted, time: .shortened) } ?? " · Running")").font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
-            if entry.endedAt == nil { Text(durationText(entry.duration(at: model.now))).font(.system(.body, design: .monospaced)) }
-            else { DurationField(model: model, entry: entry) }
+            DurationField(model: model, entry: entry)
             if model.store?.state.pendingEntries.contains(entry.id) == true { Image(systemName: "arrow.triangle.2.circlepath").font(.caption).foregroundStyle(.secondary).help("Saved locally, waiting to sync") }
             Button { editor = EntryEditorItem(entry: entry) } label: { Image(systemName: "pencil") }.buttonStyle(.borderless).help("Edit time entry")
         }.padding(15).background(Color.primary.opacity(0.035), in: RoundedRectangle(cornerRadius: 10))
@@ -164,31 +166,43 @@ struct MainView: View {
     }
 }
 
-/// Click the duration, type a new one and press Return. The start stays put and the end moves.
+/// Click the duration, type a new one and press Return. A finished entry keeps its start and moves its end.
+/// A running entry keeps running and moves its start, so the clock reads the typed duration from now on.
 private struct DurationField: View {
     @ObservedObject var model: AppModel
     let entry: TimeEntry
+    var font: Font = .system(.body, design: .monospaced)
+    var width: CGFloat? = 90
+    var alignment: TextAlignment = .trailing
     @State private var text = ""
+    @State private var shownOnFocus = ""
     @FocusState private var focused: Bool
     private var current: String { durationText(entry.duration(at: model.now)) }
     var body: some View {
         TextField("", text: $text)
-            .textFieldStyle(.plain).font(.system(.body, design: .monospaced)).multilineTextAlignment(.trailing)
-            .frame(width: 90).padding(.vertical, 3).padding(.horizontal, 6)
+            .textFieldStyle(.plain).font(font).monospacedDigit().multilineTextAlignment(alignment)
+            .frame(width: width).padding(.vertical, 3).padding(.horizontal, 6)
             .background(focused ? Color.primary.opacity(0.08) : .clear, in: RoundedRectangle(cornerRadius: 6))
             .focused($focused)
             .help("Click to change the duration, e.g. 3:00, 1.5 or 1h 30m")
             .onAppear { text = current }
             .onChange(of: entry) { _, _ in if !focused { text = current } }
+            .onChange(of: model.now) { _, _ in if !focused && entry.endedAt == nil { text = current } }
             .onSubmit { commit(); focused = false }
-            .onChange(of: focused) { _, isFocused in if !isFocused { commit() } }
+            .onChange(of: focused) { _, isFocused in if isFocused { shownOnFocus = text } else { commit() } }
             .onExitCommand { text = current; focused = false }
     }
     private func commit() {
-        guard text != current else { return }
+        guard text != shownOnFocus else { text = current; return }
         guard let seconds = parseDuration(text) else { text = current; return }
-        let start = Date(milliseconds: entry.startedAt)
-        model.perform { try model.store?.updateEntry(id: entry.id, categoryId: entry.categoryId, note: entry.note, start: start, end: start.addingTimeInterval(seconds)) }
+        shownOnFocus = text
+        if entry.endedAt == nil {
+            let start = Date().addingTimeInterval(-seconds)
+            model.perform { try model.store?.updateEntry(id: entry.id, categoryId: entry.categoryId, note: entry.note, start: start, end: nil) }
+        } else {
+            let start = Date(milliseconds: entry.startedAt)
+            model.perform { try model.store?.updateEntry(id: entry.id, categoryId: entry.categoryId, note: entry.note, start: start, end: start.addingTimeInterval(seconds)) }
+        }
         text = durationText(seconds)
     }
 }
