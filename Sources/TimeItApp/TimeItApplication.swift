@@ -24,6 +24,7 @@ import TimeItCore
             }
             .foregroundStyle(model.active == nil ? Color.primary : Color.orange)
             .accessibilityLabel(model.active == nil ? "Time It: start Convex timer" : "Time It: recording")
+            .background(OpenWindowCapture(delegate: delegate))
         }
         .menuBarExtraStyle(.menu)
         Window("Time It", id: "main") {
@@ -36,5 +37,14 @@ import TimeItCore
                 Button("Export CSV…") { AppModel.shared.exportCSV() }
             }
         }
+    }
+}
+
+/// The menu bar label is always on screen, so it hands SwiftUI's openWindow action to the delegate.
+private struct OpenWindowCapture: View {
+    let delegate: AppDelegate
+    @Environment(\.openWindow) private var openWindow
+    var body: some View {
+        Color.clear.onAppear { delegate.openMainWindow = { openWindow(id: "main") } }
     }
 }

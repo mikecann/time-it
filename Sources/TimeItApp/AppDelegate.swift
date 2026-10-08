@@ -1,6 +1,8 @@
 import AppKit
 
 @MainActor final class AppDelegate: NSObject, NSApplicationDelegate {
+    // SwiftUI drops the window when it closes, so only its own openWindow action can bring it back.
+    var openMainWindow: (() -> Void)?
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
     // With the window closed Time It lives only in the menu bar, so it drops out of the Dock and taskbar.
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -35,6 +37,6 @@ import AppKit
         NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
         if let window = NSApp.windows.first(where: { $0.title == "Time It" }) { window.makeKeyAndOrderFront(nil) }
-        else { NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: .init()) }
+        else { openMainWindow?() }
     }
 }
