@@ -24,9 +24,11 @@ Time is saved on your Mac before anything goes over the network. You can start a
 
 Paste this into your AI coding agent:
 
-> Clone https://github.com/mikecann/time-it and make it my own. It's one of Mike
-> Cann's personal tools, so read the README first, change anything specific to his
-> setup to suit mine, then help me get it running.
+> Fork https://github.com/mikecann/time-it to my GitHub account and clone my fork
+> (if I don't use GitHub, or want to keep my copy private, just clone it instead),
+> then make it my own. It's one of Mike Cann's personal tools, so read the README
+> first, change anything specific to his setup to suit mine, then help me get it
+> running.
 
 ## Install
 
